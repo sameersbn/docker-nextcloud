@@ -1,10 +1,10 @@
 #!/bin/bash
 set -e
-source ${OWNCLOUD_RUNTIME_DIR}/env-defaults
+source ${NEXTCLOUD_RUNTIME_DIR}/env-defaults
 
-OWNCLOUD_TEMPLATES_DIR=${OWNCLOUD_RUNTIME_DIR}/config
-OWNCLOUD_APP_CONFIG=${OWNCLOUD_CONFIG_DIR}/config.php
-OWNCLOUD_NGINX_CONFIG=/etc/nginx/sites-enabled/ownCloud.conf
+NEXTCLOUD_TEMPLATES_DIR=${NEXTCLOUD_RUNTIME_DIR}/config
+NEXTCLOUD_APP_CONFIG=${NEXTCLOUD_CONFIG_DIR}/config.php
+NEXTCLOUD_NGINX_CONFIG=/etc/nginx/sites-enabled/Nextcloud.conf
 
 # Compares two version strings `a` and `b`
 # Returns
@@ -38,7 +38,7 @@ parse_yaml() {
 
 get_php_param() {
   local key=${1?key not specified}
-  sed -n -e "s/^\(${key}=\)\(.*\)\(.*\)$/\2/p" ${OWNCLOUD_INSTALL_DIR}/.user.ini
+  sed -n -e "s/^\(${key}=\)\(.*\)\(.*\)$/\2/p" ${NEXTCLOUD_INSTALL_DIR}/.user.ini
 }
 
 set_php_param() {
@@ -55,26 +55,26 @@ set_php_param() {
 
   if [[ $(sed -n -e "s/^[;]*[ ]*\(${key}\)=.*/\1/p" .user.ini) == ${key} ]]; then
     value="$(echo "${value}" | sed 's|[&]|\\&|g')"
-    sed -i "s|^[;]*[ ]*${key}=.*|${key}=${value}|" ${OWNCLOUD_INSTALL_DIR}/.user.ini
+    sed -i "s|^[;]*[ ]*${key}=.*|${key}=${value}|" ${NEXTCLOUD_INSTALL_DIR}/.user.ini
   else
-    echo "${key}=${value}" >> ${OWNCLOUD_INSTALL_DIR}/.user.ini
+    echo "${key}=${value}" >> ${NEXTCLOUD_INSTALL_DIR}/.user.ini
   fi
 }
 
-## Execute a command as OWNCLOUD_USER
-exec_as_owncloud() {
-  if [[ $(whoami) == ${OWNCLOUD_USER} ]]; then
+## Execute a command as NEXTCLOUD_USER
+exec_as_nextcloud() {
+  if [[ $(whoami) == ${NEXTCLOUD_USER} ]]; then
     $@
   else
-    sudo -HEu ${OWNCLOUD_USER} "$@"
+    sudo -HEu ${NEXTCLOUD_USER} "$@"
   fi
 }
 
 occ_cli() {
-  exec_as_owncloud php occ $@
+  exec_as_nextcloud php occ $@
 }
 
-## Copies configuration template in ${OWNCLOUD_TEMPLATES_DIR} to the destination as the specified USER
+## Copies configuration template in ${NEXTCLOUD_TEMPLATES_DIR} to the destination as the specified USER
 # $1: ownership of destination file, uses `chown`
 # $2: source file
 # $3: destination location
@@ -84,8 +84,8 @@ install_template() {
   local SRC=${2}
   local DEST=${3}
   local MODE=${4:-0644}
-  if [[ -f ${OWNCLOUD_TEMPLATES_DIR}/${SRC} ]]; then
-    cp ${OWNCLOUD_TEMPLATES_DIR}/${SRC} ${DEST}
+  if [[ -f ${NEXTCLOUD_TEMPLATES_DIR}/${SRC} ]]; then
+    cp ${NEXTCLOUD_TEMPLATES_DIR}/${SRC} ${DEST}
   fi
   chmod ${MODE} ${DEST}
   chown ${OWNERSHIP} ${DEST}
@@ -120,29 +120,29 @@ update_template() {
   rm -f ${tmp_file}
 }
 
-owncloud_get_param() {
+nextcloud_get_param() {
   local key=${1?missing argument}
-  exec_as_owncloud sed -n -e "s/\([ ]*\)\('${key}' => '\)\([^ ']*\)\(.*\)$/\3/p" ${OWNCLOUD_APP_CONFIG}
+  exec_as_nextcloud sed -n -e "s/\([ ]*\)\('${key}' => '\)\([^ ']*\)\(.*\)$/\3/p" ${NEXTCLOUD_APP_CONFIG}
 }
 
-owncloud_set_param() {
+nextcloud_set_param() {
   local key=${1?missing argument}
   local value=${2?missing argument}
   local hide=${3}
   if [[ -n ${value} ]]; then
-    local current=$(owncloud_get_param ${key})
+    local current=$(nextcloud_get_param ${key})
     if [[ "${current}" != "${value}" ]]; then
       case ${hide} in
         true)  echo "‣ Setting config.php parameter: ${key}" ;;
         *) echo "‣ Setting config.php parameter: ${key} = '${value}'" ;;
       esac
       value="$(echo "${value}" | sed 's|[&]|\\&|g')"
-      exec_as_owncloud sed -i "s|'${key}' => .*|'${key}' => '${value}',|" ${OWNCLOUD_APP_CONFIG}
+      exec_as_nextcloud sed -i "s|'${key}' => .*|'${key}' => '${value}',|" ${NEXTCLOUD_APP_CONFIG}
     fi
   fi
 }
 
-owncloud_finalize_database_parameters() {
+nextcloud_finalize_database_parameters() {
   # is a mysql or postgresql database linked?
   # requires that the mysql or postgresql containers have exposed
   # port 3306 and 5432 respectively.
@@ -212,17 +212,17 @@ owncloud_finalize_database_parameters() {
 
   # set default user and database
   DB_USER=${DB_USER:-root}
-  DB_NAME=${DB_NAME:-ownclouddb}
+  DB_NAME=${DB_NAME:-nextclouddb}
 }
 
-owncloud_finalize_php_fpm_parameters() {
-  # is a owncloud-php-fpm container linked?
+nextcloud_finalize_php_fpm_parameters() {
+  # is a nextcloud-php-fpm container linked?
   if [[ -n ${PHP_FPM_PORT_9000_TCP_ADDR} ]]; then
-    OWNCLOUD_PHP_FPM_HOST=${OWNCLOUD_PHP_FPM_HOST:-$PHP_FPM_PORT_9000_TCP_ADDR}
-    OWNCLOUD_PHP_FPM_PORT=${OWNCLOUD_PHP_FPM_PORT:-$PHP_FPM_PORT_9000_TCP_PORT}
+    NEXTCLOUD_PHP_FPM_HOST=${NEXTCLOUD_PHP_FPM_HOST:-$PHP_FPM_PORT_9000_TCP_ADDR}
+    NEXTCLOUD_PHP_FPM_PORT=${NEXTCLOUD_PHP_FPM_PORT:-$PHP_FPM_PORT_9000_TCP_PORT}
   fi
 
-  if [[ -z ${OWNCLOUD_PHP_FPM_HOST} ]]; then
+  if [[ -z ${NEXTCLOUD_PHP_FPM_HOST} ]]; then
     echo
     echo "ERROR: "
     echo "  Please configure the php-fpm connection. Aborting..."
@@ -231,10 +231,10 @@ owncloud_finalize_php_fpm_parameters() {
   fi
 
   # use default php-fpm port number if it is still not set
-  OWNCLOUD_PHP_FPM_PORT=${OWNCLOUD_PHP_FPM_PORT:-9000}
+  NEXTCLOUD_PHP_FPM_PORT=${NEXTCLOUD_PHP_FPM_PORT:-9000}
 }
 
-owncloud_check_database_connection() {
+nextcloud_check_database_connection() {
   case ${DB_TYPE} in
     mysql)
       prog="mysqladmin -h ${DB_HOST} -P ${DB_PORT} -u ${DB_USER} ${DB_PASS:+-p$DB_PASS} status"
@@ -259,22 +259,22 @@ owncloud_check_database_connection() {
   echo
 }
 
-owncloud_configure_database() {
-  echo -n "Configuring ownCloud::database"
+nextcloud_configure_database() {
+  echo -n "Configuring Nextcloud::database"
 
-  owncloud_finalize_database_parameters
-  owncloud_check_database_connection
+  nextcloud_finalize_database_parameters
+  nextcloud_check_database_connection
 
-  if [[ -f ${OWNCLOUD_APP_CONFIG} ]]; then
-    owncloud_set_param dbtype ${DB_TYPE}
-    owncloud_set_param dbhost ${DB_HOST}:${DB_PORT}
-    owncloud_set_param dbname ${DB_NAME}
-    owncloud_set_param dbuser ${DB_USER}
-    owncloud_set_param dbpassword ${DB_PASS} true
+  if [[ -f ${NEXTCLOUD_APP_CONFIG} ]]; then
+    nextcloud_set_param dbtype ${DB_TYPE}
+    nextcloud_set_param dbhost ${DB_HOST}:${DB_PORT}
+    nextcloud_set_param dbname ${DB_NAME}
+    nextcloud_set_param dbuser ${DB_USER}
+    nextcloud_set_param dbpassword ${DB_PASS} true
   fi
 }
 
-owncloud_upgrade() {
+nextcloud_upgrade() {
   # perform installation on firstrun
   case ${DB_TYPE} in
     mysql)
@@ -289,33 +289,33 @@ owncloud_upgrade() {
 
   local update_version=false
   if [[ -z ${COUNT} || ${COUNT} -eq 0 ]]; then
-    echo "Setting up ownCloud for firstrun..."
-    mkdir -p ${OWNCLOUD_INSTALL_DIR}/data
-    chown -R ${OWNCLOUD_USER}: ${OWNCLOUD_INSTALL_DIR}/data
+    echo "Setting up Nextcloud for firstrun..."
+    mkdir -p ${NEXTCLOUD_INSTALL_DIR}/data
+    chown -R ${NEXTCLOUD_USER}: ${NEXTCLOUD_INSTALL_DIR}/data
 
     occ_cli maintenance:install \
       --database=${DB_TYPE} --database-host=${DB_HOST}:${DB_PORT} \
       --database-name=${DB_NAME} --database-user=${DB_USER} --database-pass=${DB_PASS} \
-      --admin-user=${OWNCLOUD_ADMIN_USER} --admin-pass=${OWNCLOUD_ADMIN_PASSWORD} \
-      --data-dir=${OWNCLOUD_OCDATA_DIR} >/dev/null
+      --admin-user=${NEXTCLOUD_ADMIN_USER} --admin-pass=${NEXTCLOUD_ADMIN_PASSWORD} \
+      --data-dir=${NEXTCLOUD_OCDATA_DIR} >/dev/null
 
     update_version=true
   else
     CACHE_VERSION=
-    [[ -f ${OWNCLOUD_CONFIG_DIR}/VERSION ]] && CACHE_VERSION=$(cat ${OWNCLOUD_CONFIG_DIR}/VERSION)
-    if [[ ${OWNCLOUD_VERSION} != ${CACHE_VERSION} ]]; then
+    [[ -f ${NEXTCLOUD_CONFIG_DIR}/VERSION ]] && CACHE_VERSION=$(cat ${NEXTCLOUD_CONFIG_DIR}/VERSION)
+    if [[ ${NEXTCLOUD_VERSION} != ${CACHE_VERSION} ]]; then
       ## version check, only upgrades are allowed
-      if [[ -n ${CACHE_VERSION} && $(vercmp ${OWNCLOUD_VERSION} ${CACHE_VERSION}) -lt 0 ]]; then
+      if [[ -n ${CACHE_VERSION} && $(vercmp ${NEXTCLOUD_VERSION} ${CACHE_VERSION}) -lt 0 ]]; then
         echo
         echo "ERROR: "
-        echo "  Cannot downgrade from ownCloud version ${CACHE_VERSION} to ${OWNCLOUD_VERSION}."
-        echo "  Only upgrades are allowed. Please use sameersbn/owncloud:${CACHE_VERSION} or higher."
+        echo "  Cannot downgrade from Nextcloud version ${CACHE_VERSION} to ${NEXTCLOUD_VERSION}."
+        echo "  Only upgrades are allowed. Please use sameersbn/nextcloud:${CACHE_VERSION} or higher."
         echo "  Cannot continue. Aborting!"
         echo
         return 1
       fi
 
-      echo "Upgrading ownCloud..."
+      echo "Upgrading Nextcloud..."
       occ_cli maintenance:mode --on
       occ_cli upgrade
       occ_cli maintenance:mode --off
@@ -325,35 +325,35 @@ owncloud_upgrade() {
   fi
 
   if [[ ${update_version} == true ]]; then
-    echo -n "${OWNCLOUD_VERSION}" | exec_as_owncloud tee ${OWNCLOUD_CONFIG_DIR}/VERSION >/dev/null
+    echo -n "${NEXTCLOUD_VERSION}" | exec_as_nextcloud tee ${NEXTCLOUD_CONFIG_DIR}/VERSION >/dev/null
   fi
 }
 
-owncloud_configure_domain() {
-  echo "Configuring ownCloud::trusted_domain..."
-  owncloud_set_param overwrite.cli.url ${OWNCLOUD_URL}
-  sed -i "s|0 => '.*',|0 => '${OWNCLOUD_FQDN}',|" ${OWNCLOUD_APP_CONFIG}
+nextcloud_configure_domain() {
+  echo "Configuring Nextcloud::trusted_domain..."
+  nextcloud_set_param overwrite.cli.url ${NEXTCLOUD_URL}
+  sed -i "s|0 => '.*',|0 => '${NEXTCLOUD_FQDN}',|" ${NEXTCLOUD_APP_CONFIG}
 }
 
-owncloud_configure_max_upload_size() {
-  echo "Configuring ownCloud::max_upload_size..."
-  set_php_param upload_max_filesize ${OWNCLOUD_UPLOAD_MAX_FILESIZE}
-  set_php_param post_max_size ${OWNCLOUD_UPLOAD_MAX_FILESIZE}
+nextcloud_configure_max_upload_size() {
+  echo "Configuring Nextcloud::max_upload_size..."
+  set_php_param upload_max_filesize ${NEXTCLOUD_UPLOAD_MAX_FILESIZE}
+  set_php_param post_max_size ${NEXTCLOUD_UPLOAD_MAX_FILESIZE}
 }
 
-owncloud_configure_max_file_uploads() {
-  echo "Configuring ownCloud::max_file_uploads..."
-  set_php_param max_file_uploads ${OWNCLOUD_MAX_FILE_UPLOADS}
+nextcloud_configure_max_file_uploads() {
+  echo "Configuring Nextcloud::max_file_uploads..."
+  set_php_param max_file_uploads ${NEXTCLOUD_MAX_FILE_UPLOADS}
 }
 
 nginx_configure_virtualhost() {
-  echo "Configuring ownCloud virtualhost..."
-  owncloud_finalize_php_fpm_parameters
-  update_template ${OWNCLOUD_NGINX_CONFIG} \
-    OWNCLOUD_FQDN \
-    OWNCLOUD_HTTPS \
-    OWNCLOUD_PHP_FPM_HOST \
-    OWNCLOUD_PHP_FPM_PORT
+  echo "Configuring Nextcloud virtualhost..."
+  nextcloud_finalize_php_fpm_parameters
+  update_template ${NEXTCLOUD_NGINX_CONFIG} \
+    NEXTCLOUD_FQDN \
+    NEXTCLOUD_HTTPS \
+    NEXTCLOUD_PHP_FPM_HOST \
+    NEXTCLOUD_PHP_FPM_PORT
 }
 
 backup_dump_database() {
@@ -362,17 +362,17 @@ backup_dump_database() {
       echo "Dumping PostgreSQL database ${DB_NAME}..."
       PGPASSWORD=${DB_PASS} pg_dump --clean \
         --host ${DB_HOST} --port ${DB_PORT} \
-        --username ${DB_USER} ${DB_NAME} > ${OWNCLOUD_BACKUPS_DIR}/database.sql
+        --username ${DB_USER} ${DB_NAME} > ${NEXTCLOUD_BACKUPS_DIR}/database.sql
       ;;
     mysql)
       echo "Dumping MySQL database ${DB_NAME}..."
       MYSQL_PWD=${DB_PASS} mysqldump --lock-tables --add-drop-table \
         --host ${DB_HOST} --port ${DB_PORT} \
-        --user ${DB_USER} ${DB_NAME} > ${OWNCLOUD_BACKUPS_DIR}/database.sql
+        --user ${DB_USER} ${DB_NAME} > ${NEXTCLOUD_BACKUPS_DIR}/database.sql
       ;;
   esac
-  chown ${OWNCLOUD_USER}: ${OWNCLOUD_BACKUPS_DIR}/database.sql
-  exec_as_owncloud gzip -f ${OWNCLOUD_BACKUPS_DIR}/database.sql
+  chown ${NEXTCLOUD_USER}: ${NEXTCLOUD_BACKUPS_DIR}/database.sql
+  exec_as_nextcloud gzip -f ${NEXTCLOUD_BACKUPS_DIR}/database.sql
 }
 
 backup_dump_directory() {
@@ -381,39 +381,39 @@ backup_dump_directory() {
   local extension=${2}
 
   echo "Dumping ${dirname}..."
-  exec_as_owncloud tar -cf ${OWNCLOUD_BACKUPS_DIR}/${dirname}${extension} -C ${directory} .
+  exec_as_nextcloud tar -cf ${NEXTCLOUD_BACKUPS_DIR}/${dirname}${extension} -C ${directory} .
 }
 
 backup_dump_information() {
   (
     echo "info:"
-    echo "  owncloud_version: ${OWNCLOUD_VERSION}"
-    echo "  database_adapter: $(owncloud_get_param dbtype)"
+    echo "  nextcloud_version: ${NEXTCLOUD_VERSION}"
+    echo "  database_adapter: $(nextcloud_get_param dbtype)"
     echo "  created_at: $(date)"
-  ) > ${OWNCLOUD_BACKUPS_DIR}/backup_information.yml
-  chown ${OWNCLOUD_USER}: ${OWNCLOUD_BACKUPS_DIR}/backup_information.yml
+  ) > ${NEXTCLOUD_BACKUPS_DIR}/backup_information.yml
+  chown ${NEXTCLOUD_USER}: ${NEXTCLOUD_BACKUPS_DIR}/backup_information.yml
 }
 
 backup_create_archive() {
-  local tar_file="$(date +%s)_owncloud_backup.tar"
+  local tar_file="$(date +%s)_nextcloud_backup.tar"
 
   echo "Creating backup archive: ${tar_file}..."
-  exec_as_owncloud tar -cf ${OWNCLOUD_BACKUPS_DIR}/${tar_file} -C ${OWNCLOUD_BACKUPS_DIR} $@
-  exec_as_owncloud chmod 0755 ${OWNCLOUD_BACKUPS_DIR}/${tar_file}
+  exec_as_nextcloud tar -cf ${NEXTCLOUD_BACKUPS_DIR}/${tar_file} -C ${NEXTCLOUD_BACKUPS_DIR} $@
+  exec_as_nextcloud chmod 0755 ${NEXTCLOUD_BACKUPS_DIR}/${tar_file}
 
   for f in $@
   do
-    exec_as_owncloud rm -rf ${OWNCLOUD_BACKUPS_DIR}/${f}
+    exec_as_nextcloud rm -rf ${NEXTCLOUD_BACKUPS_DIR}/${f}
   done
 }
 
 backup_purge_expired() {
-  if [[ ${OWNCLOUD_BACKUPS_EXPIRY} -gt 0 ]]; then
+  if [[ ${NEXTCLOUD_BACKUPS_EXPIRY} -gt 0 ]]; then
     echo -n "Deleting old backups... "
     local removed=0
     local now=$(date +%s)
-    local cutoff=$(expr ${now} - ${OWNCLOUD_BACKUPS_EXPIRY})
-    for backup in $(ls ${OWNCLOUD_BACKUPS_DIR}/*_owncloud_backup.tar)
+    local cutoff=$(expr ${now} - ${NEXTCLOUD_BACKUPS_EXPIRY})
+    for backup in $(ls ${NEXTCLOUD_BACKUPS_DIR}/*_nextcloud_backup.tar)
     do
       local timestamp=$(stat -c %Y ${backup})
       if [[ ${timestamp} -lt ${cutoff} ]]; then
@@ -428,19 +428,19 @@ backup_purge_expired() {
 backup_restore_unpack() {
   local backup=${1}
   echo "Unpacking ${backup}..."
-  tar xf ${OWNCLOUD_BACKUPS_DIR}/${backup} -C ${OWNCLOUD_BACKUPS_DIR}
+  tar xf ${NEXTCLOUD_BACKUPS_DIR}/${backup} -C ${NEXTCLOUD_BACKUPS_DIR}
 }
 
 backup_restore_validate() {
-  eval $(parse_yaml ${OWNCLOUD_BACKUPS_DIR}/backup_information.yml backup_)
+  eval $(parse_yaml ${NEXTCLOUD_BACKUPS_DIR}/backup_information.yml backup_)
 
   ## version check
-  if [[ $(vercmp ${OWNCLOUD_VERSION} ${backup_info_owncloud_version}) -lt 0 ]]; then
+  if [[ $(vercmp ${NEXTCLOUD_VERSION} ${backup_info_nextcloud_version}) -lt 0 ]]; then
     echo
     echo "ERROR: "
-    echo "  Cannot restore backup for version ${backup_info_owncloud_version} on a ${OWNCLOUD_VERSION} instance."
-    echo "  You can only restore backups generated for versions <= ${OWNCLOUD_VERSION}."
-    echo "  Please use sameersbn/owncloud:${backup_info_owncloud_version} to restore this backup."
+    echo "  Cannot restore backup for version ${backup_info_nextcloud_version} on a ${NEXTCLOUD_VERSION} instance."
+    echo "  You can only restore backups generated for versions <= ${NEXTCLOUD_VERSION}."
+    echo "  Please use sameersbn/nextcloud:${backup_info_nextcloud_version} to restore this backup."
     echo "  Cannot continue. Aborting!"
     echo
     return 1
@@ -456,21 +456,21 @@ backup_restore_validate() {
     echo
     return 1
   fi
-  exec_as_owncloud rm -rf ${OWNCLOUD_BACKUPS_DIR}/backup_information.yml
+  exec_as_nextcloud rm -rf ${NEXTCLOUD_BACKUPS_DIR}/backup_information.yml
 }
 
 backup_restore_database() {
   case ${DB_TYPE} in
     pgsql)
       echo "Restoring PostgreSQL database..."
-      gzip -dc ${OWNCLOUD_BACKUPS_DIR}/database.sql.gz | \
+      gzip -dc ${NEXTCLOUD_BACKUPS_DIR}/database.sql.gz | \
         PGPASSWORD=${DB_PASS} psql \
           --host ${DB_HOST} --port ${DB_PORT} \
           --username ${DB_USER} ${DB_NAME}
       ;;
     mysql)
       echo "Restoring MySQL database..."
-      gzip -dc ${OWNCLOUD_BACKUPS_DIR}/database.sql.gz | \
+      gzip -dc ${NEXTCLOUD_BACKUPS_DIR}/database.sql.gz | \
         MYSQL_PWD=${DB_PASS} mysql \
           --host ${DB_HOST} --port ${DB_PORT} \
           --user ${DB_USER} ${DB_NAME}
@@ -480,7 +480,7 @@ backup_restore_database() {
       return 1
       ;;
   esac
-  exec_as_owncloud rm -rf ${OWNCLOUD_BACKUPS_DIR}/database.sql.gz
+  exec_as_nextcloud rm -rf ${NEXTCLOUD_BACKUPS_DIR}/database.sql.gz
 }
 
 backup_restore_directory() {
@@ -491,45 +491,45 @@ backup_restore_directory() {
   echo "Restoring ${dirname}..."
   files=($(shopt -s nullglob;shopt -s dotglob;echo ${directory}/*))
   if [[ ${#files[@]} -gt 0 ]]; then
-    exec_as_owncloud mv ${directory} ${directory}.$(date +%s)
+    exec_as_nextcloud mv ${directory} ${directory}.$(date +%s)
   else
-    exec_as_owncloud rm -rf ${directory}
+    exec_as_nextcloud rm -rf ${directory}
   fi
-  exec_as_owncloud mkdir -p ${directory}
-  exec_as_owncloud tar -xf ${OWNCLOUD_BACKUPS_DIR}/${dirname}${extension} -C ${directory}
-  exec_as_owncloud rm -rf ${OWNCLOUD_BACKUPS_DIR}/${dirname}${extension}
+  exec_as_nextcloud mkdir -p ${directory}
+  exec_as_nextcloud tar -xf ${NEXTCLOUD_BACKUPS_DIR}/${dirname}${extension} -C ${directory}
+  exec_as_nextcloud rm -rf ${NEXTCLOUD_BACKUPS_DIR}/${dirname}${extension}
 }
 
 install_configuration_templates() {
   echo "Installing configuration templates..."
-  if [[ -d /etc/nginx/sites-enabled && ! -f ${OWNCLOUD_NGINX_CONFIG} ]]; then
-    install_template root: nginx/ownCloud.conf ${OWNCLOUD_NGINX_CONFIG} 0644
-    update_template ${OWNCLOUD_NGINX_CONFIG} OWNCLOUD_INSTALL_DIR
+  if [[ -d /etc/nginx/sites-enabled && ! -f ${NEXTCLOUD_NGINX_CONFIG} ]]; then
+    install_template root: nginx/Nextcloud.conf ${NEXTCLOUD_NGINX_CONFIG} 0644
+    update_template ${NEXTCLOUD_NGINX_CONFIG} NEXTCLOUD_INSTALL_DIR
   fi
 }
 
 initialize_datadir() {
   echo "Initializing datadir..."
-  chmod 0755 ${OWNCLOUD_DATA_DIR}
-  chown ${OWNCLOUD_USER}: ${OWNCLOUD_DATA_DIR}
+  chmod 0755 ${NEXTCLOUD_DATA_DIR}
+  chown ${NEXTCLOUD_USER}: ${NEXTCLOUD_DATA_DIR}
 
   # create ocdata directory
-  mkdir -p ${OWNCLOUD_OCDATA_DIR}
-  chown -R ${OWNCLOUD_USER}: ${OWNCLOUD_OCDATA_DIR}
-  chmod -R 0750 ${OWNCLOUD_OCDATA_DIR}
+  mkdir -p ${NEXTCLOUD_OCDATA_DIR}
+  chown -R ${NEXTCLOUD_USER}: ${NEXTCLOUD_OCDATA_DIR}
+  chmod -R 0750 ${NEXTCLOUD_OCDATA_DIR}
 
   # create config directory
-  mkdir -p ${OWNCLOUD_CONFIG_DIR}
-  chown -R ${OWNCLOUD_USER}: ${OWNCLOUD_CONFIG_DIR}
-  chmod -R 0750 ${OWNCLOUD_CONFIG_DIR}
+  mkdir -p ${NEXTCLOUD_CONFIG_DIR}
+  chown -R ${NEXTCLOUD_USER}: ${NEXTCLOUD_CONFIG_DIR}
+  chmod -R 0750 ${NEXTCLOUD_CONFIG_DIR}
 
   # create backups directory
-  mkdir -p ${OWNCLOUD_BACKUPS_DIR}
-  chmod -R 0755 ${OWNCLOUD_BACKUPS_DIR}
-  chown -R ${OWNCLOUD_USER}: ${OWNCLOUD_BACKUPS_DIR}
+  mkdir -p ${NEXTCLOUD_BACKUPS_DIR}
+  chmod -R 0755 ${NEXTCLOUD_BACKUPS_DIR}
+  chown -R ${NEXTCLOUD_USER}: ${NEXTCLOUD_BACKUPS_DIR}
 
-  # symlink to config/config.php -> ${OWNCLOUD_CONFIG_DIR}/config.php
-  ln -sf ${OWNCLOUD_CONFIG_DIR}/config.php ${OWNCLOUD_INSTALL_DIR}/config/config.php
+  # symlink to config/config.php -> ${NEXTCLOUD_CONFIG_DIR}/config.php
+  ln -sf ${NEXTCLOUD_CONFIG_DIR}/config.php ${NEXTCLOUD_INSTALL_DIR}/config/config.php
 }
 
 initialize_system() {
@@ -537,15 +537,15 @@ initialize_system() {
   install_configuration_templates
 }
 
-configure_owncloud() {
-  echo "Configuring ownCloud..."
-  owncloud_configure_database
-  owncloud_upgrade
-  owncloud_configure_domain
-  owncloud_configure_max_upload_size
-  owncloud_configure_max_file_uploads
+configure_nextcloud() {
+  echo "Configuring Nextcloud..."
+  nextcloud_configure_database
+  nextcloud_upgrade
+  nextcloud_configure_domain
+  nextcloud_configure_max_upload_size
+  nextcloud_configure_max_file_uploads
 
-  if [[ -f ${OWNCLOUD_APP_CONFIG} ]]; then
+  if [[ -f ${NEXTCLOUD_APP_CONFIG} ]]; then
     occ_cli maintenance:mode --quiet --off
   fi
 }
@@ -557,13 +557,13 @@ configure_nginx() {
 
 backup_create() {
   echo -n "Checking database connection"
-  owncloud_finalize_database_parameters
-  owncloud_check_database_connection
+  nextcloud_finalize_database_parameters
+  nextcloud_check_database_connection
 
   occ_cli maintenance:mode --on
   backup_dump_database
-  backup_dump_directory ${OWNCLOUD_CONFIG_DIR} .tar.gz
-  backup_dump_directory ${OWNCLOUD_OCDATA_DIR} .tar
+  backup_dump_directory ${NEXTCLOUD_CONFIG_DIR} .tar.gz
+  backup_dump_directory ${NEXTCLOUD_OCDATA_DIR} .tar
   backup_dump_information
   backup_create_archive backup_information.yml database.sql.gz config.tar.gz ocdata.tar
   backup_purge_expired
@@ -584,16 +584,16 @@ backup_restore() {
 
   # user needs to select the backup to restore
   if [[ $interactive == true ]]; then
-    num_backups=$(ls ${OWNCLOUD_BACKUPS_DIR}/*_owncloud_backup.tar | wc -l)
+    num_backups=$(ls ${NEXTCLOUD_BACKUPS_DIR}/*_nextcloud_backup.tar | wc -l)
     if [[ $num_backups -eq 0 ]]; then
-      echo "No backups exist at ${OWNCLOUD_BACKUPS_DIR}. Cannot continue."
+      echo "No backups exist at ${NEXTCLOUD_BACKUPS_DIR}. Cannot continue."
       return 1
     fi
 
     echo
-    for b in $(ls ${OWNCLOUD_BACKUPS_DIR} | grep _owncloud_backup.tar | sort -r)
+    for b in $(ls ${NEXTCLOUD_BACKUPS_DIR} | grep _nextcloud_backup.tar | sort -r)
     do
-      echo "‣ $b (created at $(date --date="@${b%%_owncloud_backup.tar}" +'%d %b, %G - %H:%M:%S %Z'))"
+      echo "‣ $b (created at $(date --date="@${b%%_nextcloud_backup.tar}" +'%d %b, %G - %H:%M:%S %Z'))"
     done
     echo
 
@@ -605,18 +605,18 @@ backup_restore() {
     fi
   fi
 
-  if [[ ! -f ${OWNCLOUD_BACKUPS_DIR}/${tar_file} ]]; then
+  if [[ ! -f ${NEXTCLOUD_BACKUPS_DIR}/${tar_file} ]]; then
     echo "Specified backup does not exist. Aborting..."
     return 1
   fi
 
   echo -n "Checking database connection"
-  owncloud_finalize_database_parameters
-  owncloud_check_database_connection
+  nextcloud_finalize_database_parameters
+  nextcloud_check_database_connection
 
   backup_restore_unpack ${tar_file}
   backup_restore_validate
   backup_restore_database
-  backup_restore_directory ${OWNCLOUD_CONFIG_DIR} .tar.gz
-  backup_restore_directory ${OWNCLOUD_OCDATA_DIR} .tar
+  backup_restore_directory ${NEXTCLOUD_CONFIG_DIR} .tar.gz
+  backup_restore_directory ${NEXTCLOUD_OCDATA_DIR} .tar
 }

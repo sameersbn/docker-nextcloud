@@ -2,41 +2,41 @@ postgresql:
   restart: always
   image: sameersbn/postgresql:9.4-23
   environment:
-    - DB_USER=owncloud
+    - DB_USER=nextcloud
     - DB_PASS=password
-    - DB_NAME=owncloud_db
+    - DB_NAME=nextcloud_db
   volumes:
-    - /srv/docker/owncloud/postgresql:/var/lib/postgresql
+    - /srv/docker/nextcloud/postgresql:/var/lib/postgresql
 
-owncloud:
+nextcloud:
   restart: always
-  image: sameersbn/owncloud:9.0.3-1
-  command: app:owncloud
+  image: sameersbn/nextcloud:9.0.52
+  command: app:nextcloud
   environment:
     - DEBUG=false
     - TZ=Asia/Kolkata
 
-    - OWNCLOUD_URL=http://cloud.example.com:10080
+    - NEXTCLOUD_URL=http://cloud.example.com:10080
 
-    - OWNCLOUD_ADMIN_USER=
-    - OWNCLOUD_ADMIN_PASSWORD=
+    - NEXTCLOUD_ADMIN_USER=
+    - NEXTCLOUD_ADMIN_PASSWORD=
 
-    - OWNCLOUD_UPLOAD_MAX_FILESIZE=4G
-    - OWNCLOUD_MAX_FILE_UPLOADS=20
+    - NEXTCLOUD_UPLOAD_MAX_FILESIZE=4G
+    - NEXTCLOUD_MAX_FILE_UPLOADS=20
 
-    - OWNCLOUD_BACKUPS_EXPIRY=0
+    - NEXTCLOUD_BACKUPS_EXPIRY=0
   links:
     - postgresql:postgresql
   volumes:
-    - /srv/docker/owncloud/owncloud:/var/lib/owncloud
+    - /srv/docker/nextcloud/nextcloud:/var/lib/nextcloud
 
 nginx:
-  image: sameersbn/owncloud:9.0.3-1
+  image: sameersbn/nextcloud:9.0.52
   command: app:nginx
   environment:
-    - OWNCLOUD_PHP_FPM_HOST=
-    - OWNCLOUD_PHP_FPM_PORT=
+    - NEXTCLOUD_PHP_FPM_HOST=
+    - NEXTCLOUD_PHP_FPM_PORT=
   links:
-    - owncloud:php-fpm
+    - nextcloud:php-fpm
   ports:
     - "10080:80"

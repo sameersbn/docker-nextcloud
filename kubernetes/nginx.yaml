@@ -7,15 +7,15 @@ metadata:
 spec:
   containers:
     - name: nginx
-      image: sameersbn/owncloud:9.0.3-1
+      image: sameersbn/nextcloud:9.0.52
       args: ["app:nginx"]
       env:
-        - name: OWNCLOUD_URL
+        - name: NEXTCLOUD_URL
           value: http://cloud.example.com
 
-        - name: OWNCLOUD_PHP_FPM_HOST
-          value: owncloud
-        - name: OWNCLOUD_PHP_FPM_PORT
+        - name: NEXTCLOUD_PHP_FPM_HOST
+          value: nextcloud
+        - name: NEXTCLOUD_PHP_FPM_PORT
           value: "9000"
 
       ports:

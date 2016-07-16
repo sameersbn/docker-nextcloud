@@ -1,3 +1,7 @@
+**9.0.52**
+nextcloud: migrate to nextcloud 9.0.52
+
+- - -
 
 **9.0.3**
 - owncloud: upgrade to 9.0.3

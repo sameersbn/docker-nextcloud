@@ -1,18 +1,18 @@
 #!/bin/bash
 set -e
-source ${OWNCLOUD_RUNTIME_DIR}/functions
+source ${NEXTCLOUD_RUNTIME_DIR}/functions
 
 [[ $DEBUG == true ]] && set -x
 
 case ${1} in
-  app:owncloud|app:nginx|app:backup:create|app:backup:restore|occ)
+  app:nextcloud|app:nginx|app:backup:create|app:backup:restore|occ)
 
     initialize_system
 
     case ${1} in
-      app:owncloud)
-        configure_owncloud
-        echo "Starting ownCloud php5-fpm..."
+      app:nextcloud)
+        configure_nextcloud
+        echo "Starting Nextcloud php5-fpm..."
         exec $(which php5-fpm)
         ;;
       app:nginx)
@@ -35,8 +35,8 @@ case ${1} in
     ;;
   app:help)
     echo "Available options:"
-    echo " occ                  - Launch the ownCloud's command-line interface"
-    echo " app:owncloud         - Starts the ownCloud php5-fpm server (default)"
+    echo " occ                  - Launch the Nextcloud's command-line interface"
+    echo " app:nextcloud         - Starts the Nextcloud php5-fpm server (default)"
     echo " app:nginx            - Starts the nginx server"
     echo " app:backup:create    - Create a backup"
     echo " app:backup:restore   - Restore an existing backup"

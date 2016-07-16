@@ -1,7 +1,7 @@
 all: build
 
 build:
-	@docker build --tag=sameersbn/owncloud .
+	@docker build --tag=sameersbn/nextcloud .
 
 release: build
-	@docker build --tag=sameersbn/owncloud:$(shell cat VERSION) .
+	@docker build --tag=sameersbn/nextcloud:$(shell cat VERSION) .
