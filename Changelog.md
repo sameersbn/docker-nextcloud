@@ -1,4 +1,4 @@
-**latest**
+**9.0.53**
 nextcloud: upgrade to 9.0.53
 
 **9.0.52**
