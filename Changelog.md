@@ -1,3 +1,6 @@
+**latest**
+nextcloud: upgrade to 9.0.53
+
 **9.0.52**
 nextcloud: migrate to nextcloud 9.0.52
 

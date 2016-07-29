@@ -1,7 +1,7 @@
 FROM sameersbn/php5-fpm:latest
 MAINTAINER sameer@damagehead.com
 
-ENV NEXTCLOUD_VERSION=9.0.52 \
+ENV NEXTCLOUD_VERSION=9.0.53 \
     NEXTCLOUD_USER=${PHP_FPM_USER} \
     NEXTCLOUD_INSTALL_DIR=/var/www/nextcloud \
     NEXTCLOUD_DATA_DIR=/var/lib/nextcloud \
