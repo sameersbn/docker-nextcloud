@@ -10,7 +10,7 @@ postgresql:
 
 nextcloud:
   restart: always
-  image: sameersbn/nextcloud:9.0.53
+  image: sameersbn/nextcloud:9.0.53-1
   command: app:nextcloud
   environment:
     - DEBUG=false
@@ -31,7 +31,7 @@ nextcloud:
     - /srv/docker/nextcloud/nextcloud:/var/lib/nextcloud
 
 nginx:
-  image: sameersbn/nextcloud:9.0.53
+  image: sameersbn/nextcloud:9.0.53-1
   command: app:nginx
   environment:
     - NEXTCLOUD_PHP_FPM_HOST=
