@@ -1,20 +1,29 @@
-postgresql:
-  restart: always
-  image: sameersbn/postgresql:9.5-4
-  environment:
+version: '2'
+
+services:
+  postgresql:
+    restart: always
+    image: sameersbn/postgresql:9.5-4
+    environment:
     - DB_USER=nextcloud
     - DB_PASS=password
     - DB_NAME=nextcloud_db
-  volumes:
+    volumes:
     - /srv/docker/nextcloud/postgresql:/var/lib/postgresql
 
-nextcloud:
-  restart: always
-  image: sameersbn/nextcloud:9.0.55
-  command: app:nextcloud
-  environment:
+  nextcloud:
+    restart: always
+    image: sameersbn/nextcloud:9.0.55
+    command: app:nextcloud
+    environment:
     - DEBUG=false
     - TZ=Asia/Kolkata
+
+    - DB_TYPE=pgsql
+    - DB_HOST=postgresql
+    - DB_USER=nextcloud
+    - DB_PASS=password
+    - DB_NAME=nextcloud_db
 
     - NEXTCLOUD_URL=http://cloud.example.com:10080
 
@@ -25,18 +34,19 @@ nextcloud:
     - NEXTCLOUD_MAX_FILE_UPLOADS=20
 
     - NEXTCLOUD_BACKUPS_EXPIRY=0
-  links:
-    - postgresql:postgresql
-  volumes:
+    depends_on:
+    - postgresql
+    volumes:
     - /srv/docker/nextcloud/nextcloud:/var/lib/nextcloud
 
-nginx:
-  image: sameersbn/nextcloud:9.0.55
-  command: app:nginx
-  environment:
-    - NEXTCLOUD_PHP_FPM_HOST=
-    - NEXTCLOUD_PHP_FPM_PORT=
-  links:
-    - nextcloud:php-fpm
-  ports:
+  nginx:
+    restart: always
+    image: sameersbn/nextcloud:9.0.55
+    command: app:nginx
+    environment:
+    - NEXTCLOUD_PHP_FPM_HOST=nextcloud
+    - NEXTCLOUD_PHP_FPM_PORT=9000
+    depends_on:
+    - nextcloud
+    ports:
     - "10080:80"
