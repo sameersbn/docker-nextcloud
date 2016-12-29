@@ -298,7 +298,7 @@ nextcloud_upgrade() {
       --database=${DB_TYPE} --database-host=${DB_HOST}:${DB_PORT} \
       --database-name=${DB_NAME} --database-user=${DB_USER} --database-pass=${DB_PASS} \
       --admin-user=${NEXTCLOUD_ADMIN_USER} --admin-pass=${NEXTCLOUD_ADMIN_PASSWORD} \
-      --data-dir=${NEXTCLOUD_OCDATA_DIR} >/dev/null
+      --data-dir=${NEXTCLOUD_OCDATA_DIR}
 
     update_version=true
   else
