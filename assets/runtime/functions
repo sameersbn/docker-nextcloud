@@ -120,28 +120,6 @@ update_template() {
   rm -f ${tmp_file}
 }
 
-nextcloud_get_param() {
-  local key=${1?missing argument}
-  exec_as_nextcloud sed -n -e "s/\([ ]*\)\('${key}' => '\)\([^ ']*\)\(.*\)$/\3/p" ${NEXTCLOUD_APP_CONFIG}
-}
-
-nextcloud_set_param() {
-  local key=${1?missing argument}
-  local value=${2?missing argument}
-  local hide=${3}
-  if [[ -n ${value} ]]; then
-    local current=$(nextcloud_get_param ${key})
-    if [[ "${current}" != "${value}" ]]; then
-      case ${hide} in
-        true)  echo "‣ Setting config.php parameter: ${key}" ;;
-        *) echo "‣ Setting config.php parameter: ${key} = '${value}'" ;;
-      esac
-      value="$(echo "${value}" | sed 's|[&]|\\&|g')"
-      exec_as_nextcloud sed -i "s|'${key}' => .*|'${key}' => '${value}',|" ${NEXTCLOUD_APP_CONFIG}
-    fi
-  fi
-}
-
 nextcloud_finalize_database_parameters() {
   # is a mysql or postgresql database linked?
   # requires that the mysql or postgresql containers have exposed
@@ -267,11 +245,11 @@ nextcloud_configure_database() {
   nextcloud_check_database_connection
 
   if [[ -f ${NEXTCLOUD_APP_CONFIG} ]]; then
-    nextcloud_set_param dbtype ${DB_TYPE}
-    nextcloud_set_param dbhost ${DB_HOST}:${DB_PORT}
-    nextcloud_set_param dbname ${DB_NAME}
-    nextcloud_set_param dbuser ${DB_USER}
-    nextcloud_set_param dbpassword ${DB_PASS} true
+    occ_cli config:system:set dbtype --value ${DB_TYPE}
+    occ_cli config:system:set dbhost --value ${DB_HOST}:${DB_PORT}
+    occ_cli config:system:set dbname --value ${DB_NAME}
+    occ_cli config:system:set dbuser --value ${DB_USER}
+    occ_cli config:system:set dbpassword --value ${DB_PASS}
   fi
 }
 
@@ -332,8 +310,7 @@ nextcloud_upgrade() {
 
 nextcloud_configure_domain() {
   echo "Configuring Nextcloud::trusted_domain..."
-  nextcloud_set_param overwrite.cli.url ${NEXTCLOUD_URL}
-  sed -i "s|0 => '.*',|0 => '${NEXTCLOUD_FQDN}',|" ${NEXTCLOUD_APP_CONFIG}
+  occ_cli config:system:set trusted_domains 0 --value ${NEXTCLOUD_FQDN}
 }
 
 nextcloud_configure_max_upload_size() {
@@ -389,7 +366,7 @@ backup_dump_information() {
   (
     echo "info:"
     echo "  nextcloud_version: ${NEXTCLOUD_VERSION}"
-    echo "  database_adapter: $(nextcloud_get_param dbtype)"
+    echo "  database_adapter: $(occ_cli config:system:get dbtype)"
     echo "  created_at: $(date)"
   ) > ${NEXTCLOUD_BACKUPS_DIR}/backup_information.yml
   chown ${NEXTCLOUD_USER}: ${NEXTCLOUD_BACKUPS_DIR}/backup_information.yml
