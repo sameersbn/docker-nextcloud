@@ -249,7 +249,7 @@ nextcloud_configure_database() {
     occ_cli config:system:set dbhost --value ${DB_HOST}:${DB_PORT}
     occ_cli config:system:set dbname --value ${DB_NAME}
     occ_cli config:system:set dbuser --value ${DB_USER}
-    occ_cli config:system:set dbpassword --value ${DB_PASS}
+    occ_cli config:system:set dbpassword --value ${DB_PASS} -q
   fi
 }
 
