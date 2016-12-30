@@ -8,7 +8,7 @@ if [[ ! -f ${NEXTCLOUD_BUILD_DIR}/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2 ]]; the
   wget "https://download.nextcloud.com/server/releases/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2" -O ${NEXTCLOUD_BUILD_DIR}/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2
 fi
 
-echo "Extracting ownCloud ${NEXTCLOUD_VERSION}..."
+echo "Extracting Nextcloud ${NEXTCLOUD_VERSION}..."
 tar -xf ${NEXTCLOUD_BUILD_DIR}/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2 --strip=1 -C ${NEXTCLOUD_INSTALL_DIR}
 rm -rf ${NEXTCLOUD_BUILD_DIR}/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2
 

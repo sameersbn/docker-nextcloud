@@ -36,7 +36,7 @@ case ${1} in
   app:help)
     echo "Available options:"
     echo " occ                  - Launch the Nextcloud's command-line interface"
-    echo " app:nextcloud         - Starts the Nextcloud php5-fpm server (default)"
+    echo " app:nextcloud        - Starts the Nextcloud php5-fpm server (default)"
     echo " app:nginx            - Starts the nginx server"
     echo " app:backup:create    - Create a backup"
     echo " app:backup:restore   - Restore an existing backup"

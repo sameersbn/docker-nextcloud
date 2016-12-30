@@ -506,8 +506,8 @@ initialize_datadir() {
   chmod -R 0755 ${NEXTCLOUD_BACKUPS_DIR}
   chown -R ${NEXTCLOUD_USER}: ${NEXTCLOUD_BACKUPS_DIR}
 
-  # symlink to config/config.php -> ${NEXTCLOUD_CONFIG_DIR}/config.php
-  ln -sf ${NEXTCLOUD_CONFIG_DIR}/config.php ${NEXTCLOUD_INSTALL_DIR}/config/config.php
+  # symlink to config/config.php -> ${NEXTCLOUD_APP_CONFIG}
+  ln -sf ${NEXTCLOUD_APP_CONFIG} ${NEXTCLOUD_INSTALL_DIR}/config/config.php
 }
 
 initialize_system() {
