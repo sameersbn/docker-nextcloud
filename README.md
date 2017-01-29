@@ -82,7 +82,7 @@ docker run --name nextcloud-postgresql -itd --restart=always \
   --env 'DB_NAME=nextcloud_db' \
   --env 'DB_USER=nextcloud' --env 'DB_PASS=password' \
   --volume /srv/docker/nextcloud/postgresql:/var/lib/postgresql \
-  sameersbn/postgresql:9.6-1
+  sameersbn/postgresql:9.6-2
 ```
 
 Step 2. Launch the Nextcloud php-fpm container
