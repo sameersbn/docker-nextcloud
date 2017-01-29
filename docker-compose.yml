@@ -13,7 +13,7 @@ services:
 
   nextcloud:
     restart: always
-    image: sameersbn/nextcloud:9.0.55-1
+    image: sameersbn/nextcloud:9.0.55-2
     command: app:nextcloud
     environment:
     - DEBUG=false
@@ -41,7 +41,7 @@ services:
 
   nginx:
     restart: always
-    image: sameersbn/nextcloud:9.0.55-1
+    image: sameersbn/nextcloud:9.0.55-2
     command: app:nginx
     environment:
     - NEXTCLOUD_PHP_FPM_HOST=nextcloud
