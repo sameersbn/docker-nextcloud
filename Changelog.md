@@ -1,13 +1,15 @@
 # ChangeLog
 
 **latest**
-php: upgrade to PHP 7.0
+- php: upgrade to PHP 7.0
+- nextcloud: upgrade to 9.0.56
+
 
 **9.0.53**
-nextcloud: upgrade to 9.0.53
+- nextcloud: upgrade to 9.0.53
 
 **9.0.52**
-nextcloud: migrate to nextcloud 9.0.52
+- nextcloud: migrate to nextcloud 9.0.52
 
 - - -
 
