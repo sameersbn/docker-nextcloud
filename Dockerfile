@@ -26,6 +26,7 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 14AA40EC0831756
       php${PHP_VERSION}-intl php${PHP_VERSION}-mcrypt php${PHP_VERSION}-ldap \
       php${PHP_VERSION}-gmp php${PHP_VERSION}-apcu php${PHP_VERSION}-imagick \
  && sed -i 's/^listen = .*/listen = 0.0.0.0:9000/' /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf \
+ && sed -i 's/^;env\[PATH\]/env\[PATH\]/' /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf \
  && phpenmod -v ALL mcrypt \
  && rm -rf /var/lib/apt/lists/*
 
