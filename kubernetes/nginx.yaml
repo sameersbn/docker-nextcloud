@@ -7,7 +7,7 @@ metadata:
 spec:
   containers:
     - name: nginx
-      image: sameersbn/nextcloud:9.0.56
+      image: sameersbn/nextcloud:10.0.3
       args: ["app:nginx"]
       env:
         - name: NEXTCLOUD_URL
