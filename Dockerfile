@@ -1,7 +1,7 @@
 FROM sameersbn/ubuntu:14.04.20170123
 MAINTAINER sameer@damagehead.com
 
-ENV PHP_VERSION=5.6 \
+ENV PHP_VERSION=7.0 \
     NEXTCLOUD_VERSION=9.0.55 \
     NEXTCLOUD_USER=www-data \
     NEXTCLOUD_INSTALL_DIR=/var/www/nextcloud \
