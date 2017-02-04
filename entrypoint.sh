@@ -13,7 +13,7 @@ case ${1} in
       app:nextcloud)
         configure_nextcloud
         echo "Starting Nextcloud php5-fpm..."
-        exec $(which php5-fpm)
+        exec $(which php-fpm${PHP_VERSION}) -F
         ;;
       app:nginx)
         configure_nginx
