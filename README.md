@@ -1,6 +1,6 @@
 [![Docker Repository on Quay.io](https://quay.io/repository/sameersbn/nextcloud/status "Docker Repository on Quay.io")](https://quay.io/repository/sameersbn/nextcloud)
 
-# sameersbn/nextcloud:9.0.56
+# sameersbn/nextcloud:10.0.3
 
 - [Introduction](#introduction)
   - [Contributing](#contributing)
@@ -50,7 +50,7 @@ Automated builds of the image are available on [Dockerhub](https://hub.docker.co
 > **Note**: Builds are also available on [Quay.io](https://quay.io/repository/sameersbn/nextcloud)
 
 ```bash
-docker pull sameersbn/nextcloud:9.0.56
+docker pull sameersbn/nextcloud:10.0.3
 ```
 
 Alternatively you can build the image yourself.
@@ -92,7 +92,7 @@ docker run --name nextcloud -itd --restart=always \
   --env NEXTCLOUD_URL=http://cloud.example.com:10080 \
   --link nextcloud-postgresql:postgresql \
   --volume /srv/docker/nextcloud/nextcloud:/var/lib/nextcloud \
-  sameersbn/nextcloud:9.0.56 app:nextcloud
+  sameersbn/nextcloud:10.0.3 app:nextcloud
 ```
 
 Step 3. Launch a NGINX frontend container
@@ -101,7 +101,7 @@ Step 3. Launch a NGINX frontend container
 docker run --name nextcloud-nginx -itd --restart=always \
   --link nextcloud:php-fpm \
   --publish 10080:80 \
-  sameersbn/nextcloud:9.0.56 app:nginx
+  sameersbn/nextcloud:10.0.3 app:nginx
 ```
 
 Point your browser to `http://cloud.example.com:10080` and login using the default username and password:
@@ -142,7 +142,7 @@ Relaunch the container with the `app:backup:create` argument.
 
 ```bash
 docker run --name nextcloud -it --rm [OPTIONS] \
-  sameersbn/nextcloud:9.0.56 app:backup:create
+  sameersbn/nextcloud:10.0.3 app:backup:create
 ```
 
 The backup will be created in the `backups/` folder of the [Persistent](#persistence) volume. You can change the location using the `NEXTCLOUD_BACKUPS_DIR` configuration parameter.
@@ -171,7 +171,7 @@ Relaunch the container with the `app:backup:restore` argument. Ensure you launch
 
 ```bash
 docker run --name nextcloud -it --rm [OPTIONS] \
-  sameersbn/nextcloud:9.0.56 app:backup:restore
+  sameersbn/nextcloud:10.0.3 app:backup:restore
 ```
 
 A list of existing backups will be displayed. Select a backup you wish to restore.
@@ -180,7 +180,7 @@ To avoid this interaction you can specify the backup filename using the `BACKUP`
 
 ```bash
 docker run --name nextcloud -it --rm [OPTIONS] \
-  sameersbn/nextcloud:9.0.56 app:backup:restore BACKUP=1417624827_nextcloud_backup.tar
+  sameersbn/nextcloud:10.0.3 app:backup:restore BACKUP=1417624827_nextcloud_backup.tar
 ```
 
 ## Upgrading
@@ -190,7 +190,7 @@ To upgrade to newer releases:
   1. Download the updated Docker image:
 
   ```bash
-  docker pull sameersbn/nextcloud:9.0.56
+  docker pull sameersbn/nextcloud:10.0.3
   ```
 
   2. Stop the currently running image:
@@ -210,7 +210,7 @@ To upgrade to newer releases:
   ```bash
   docker run -name nextcloud -itd \
     [OPTIONS] \
-    sameersbn/nextcloud:9.0.56
+    sameersbn/nextcloud:10.0.3
   ```
 
 ## Shell Access
