@@ -1,6 +1,6 @@
 # ChangeLog
 
-**latest**
+**9.0.56**
 - php: upgrade to PHP 7.0
 - nextcloud: upgrade to 9.0.56
 
