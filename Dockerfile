@@ -1,46 +1,35 @@
-FROM sameersbn/ubuntu:14.04.20170123
-MAINTAINER sameer@damagehead.com
+FROM ubuntu:bionic-20180526
 
-ENV PHP_VERSION=7.0 \
-    NEXTCLOUD_VERSION=11.0.1 \
+LABEL maintainer="sameer@damagehead.com"
+
+ENV PHP_VERSION=7.2 \
+    NEXTCLOUD_VERSION=13.0.4 \
     NEXTCLOUD_USER=www-data \
     NEXTCLOUD_INSTALL_DIR=/var/www/nextcloud \
     NEXTCLOUD_DATA_DIR=/var/lib/nextcloud \
-    NEXTCLOUD_CACHE_DIR=/etc/docker-nextcloud
+    NEXTCLOUD_ASSETS_DIR=/etc/docker-nextcloud
 
-ENV NEXTCLOUD_BUILD_DIR=${NEXTCLOUD_CACHE_DIR}/build \
-    NEXTCLOUD_RUNTIME_DIR=${NEXTCLOUD_CACHE_DIR}/runtime
+ENV NEXTCLOUD_BUILD_ASSETS_DIR=${NEXTCLOUD_ASSETS_DIR}/build \
+    NEXTCLOUD_RUNTIME_ASSETS_DIR=${NEXTCLOUD_ASSETS_DIR}/runtime
 
-RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 14AA40EC0831756756D7F66C4F4EA0AAE5267A6C \
- && echo "deb http://ppa.launchpad.net/ondrej/php/ubuntu trusty main" >> /etc/apt/sources.list \
- && apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 8B3981E7A6852F782CC4951600A6F0A3C300EE8C \
- && echo "deb http://ppa.launchpad.net/nginx/stable/ubuntu trusty main" >> /etc/apt/sources.list \
- && wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
- && echo 'deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main' > /etc/apt/sources.list.d/pgdg.list \
- && apt-get update \
- && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-      nginx mysql-client postgresql-client gettext-base \
-      php${PHP_VERSION}-fpm php${PHP_VERSION}-cli php${PHP_VERSION}-gd \
-      php${PHP_VERSION}-pgsql php${PHP_VERSION}-mysql php${PHP_VERSION}-curl \
-      php${PHP_VERSION}-zip php${PHP_VERSION}-xml php${PHP_VERSION}-mbstring \
-      php${PHP_VERSION}-intl php${PHP_VERSION}-mcrypt php${PHP_VERSION}-ldap \
-      php${PHP_VERSION}-gmp php${PHP_VERSION}-apcu php${PHP_VERSION}-imagick \
- && sed -i 's/^listen = .*/listen = 0.0.0.0:9000/' /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf \
- && sed -i 's/^;env\[PATH\]/env\[PATH\]/' /etc/php/${PHP_VERSION}/fpm/pool.d/www.conf \
- && phpenmod -v ALL mcrypt \
- && rm -rf /var/lib/apt/lists/*
+COPY assets/build/ ${NEXTCLOUD_BUILD_ASSETS_DIR}/
 
-COPY assets/build/ ${NEXTCLOUD_BUILD_DIR}/
-RUN bash ${NEXTCLOUD_BUILD_DIR}/install.sh
+RUN chmod 755 ${NEXTCLOUD_BUILD_ASSETS_DIR}/install.sh
 
-COPY assets/runtime/ ${NEXTCLOUD_RUNTIME_DIR}/
+RUN ${NEXTCLOUD_BUILD_ASSETS_DIR}/install.sh
+
+COPY assets/runtime/ ${NEXTCLOUD_RUNTIME_ASSETS_DIR}/
+
 COPY assets/tools/ /usr/bin/
+
 COPY entrypoint.sh /sbin/entrypoint.sh
+
 RUN chmod 755 /sbin/entrypoint.sh
 
-VOLUME ["${NEXTCLOUD_DATA_DIR}"]
 WORKDIR ${NEXTCLOUD_INSTALL_DIR}
+
 ENTRYPOINT ["/sbin/entrypoint.sh"]
+
 CMD ["app:nextcloud"]
 
 EXPOSE 80/tcp 9000/tcp

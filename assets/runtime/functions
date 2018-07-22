@@ -1,8 +1,9 @@
 #!/bin/bash
 set -e
-source ${NEXTCLOUD_RUNTIME_DIR}/env-defaults
 
-NEXTCLOUD_TEMPLATES_DIR=${NEXTCLOUD_RUNTIME_DIR}/config
+source ${NEXTCLOUD_RUNTIME_ASSETS_DIR}/env-defaults
+
+NEXTCLOUD_TEMPLATES_DIR=${NEXTCLOUD_RUNTIME_ASSETS_DIR}/config
 NEXTCLOUD_APP_CONFIG=${NEXTCLOUD_CONFIG_DIR}/config.php
 NEXTCLOUD_NGINX_CONFIG=/etc/nginx/sites-enabled/Nextcloud.conf
 
@@ -36,28 +37,30 @@ parse_yaml() {
    }'
 }
 
-get_php_param() {
-  local key=${1?key not specified}
-  sed -n -e "s/^\(${key}=\)\(.*\)\(.*\)$/\2/p" ${NEXTCLOUD_INSTALL_DIR}/.user.ini
+php_config_get() {
+  local config=${1?config file not specified}
+  local key=${2?key not specified}
+  sed -n -e "s/^\(${key}=\)\(.*\)\(.*\)$/\2/p" ${config}
 }
 
-set_php_param() {
-  local key=${1?key not specified}
-  local value=${2?value not specified}
-  local verbosity=${3:-verbose}
+php_config_set() {
+  local config=${1?config file not specified}
+  local key=${2?key not specified}
+  local value=${3?value not specified}
+  local verbosity=${4:-verbose}
 
-  local current=$(get_php_param ${key})
-  if [[ "${current}" != "${value}" ]]; then
-    if [[ ${verbosity} == verbose ]]; then
-      echo "Setting .user.ini parameter: ${key}=${value}"
-    fi
+  if [[ ${verbosity} == verbose ]]; then
+    echo "Setting ${config} parameter: ${key}=${value}"
   fi
 
-  if [[ $(sed -n -e "s/^[;]*[ ]*\(${key}\)=.*/\1/p" .user.ini) == ${key} ]]; then
-    value="$(echo "${value}" | sed 's|[&]|\\&|g')"
-    sed -i "s|^[;]*[ ]*${key}=.*|${key}=${value}|" ${NEXTCLOUD_INSTALL_DIR}/.user.ini
-  else
-    echo "${key}=${value}" >> ${NEXTCLOUD_INSTALL_DIR}/.user.ini
+  local current=$(php_config_get ${config} ${key})
+  if [[ "${current}" != "${value}" ]]; then
+    if [[ $(sed -n -e "s/^[;]*[ ]*\(${key}\)=.*/\1/p" ${config}) == ${key} ]]; then
+      value="$(echo "${value}" | sed 's|[&]|\\&|g')"
+      sed -i "s|^[;]*[ ]*${key}=.*|${key}=${value}|" ${config}
+    else
+      echo "${key}=${value}" | tee -a ${config} >/dev/null
+    fi
   fi
 }
 
@@ -315,13 +318,13 @@ nextcloud_configure_domain() {
 
 nextcloud_configure_max_upload_size() {
   echo "Configuring Nextcloud::max_upload_size..."
-  set_php_param upload_max_filesize ${NEXTCLOUD_UPLOAD_MAX_FILESIZE}
-  set_php_param post_max_size ${NEXTCLOUD_UPLOAD_MAX_FILESIZE}
+  php_config_set "${NEXTCLOUD_INSTALL_DIR}/.user.ini" "upload_max_filesize" "${NEXTCLOUD_UPLOAD_MAX_FILESIZE}"
+  php_config_set "${NEXTCLOUD_INSTALL_DIR}/.user.ini" "post_max_size" "${NEXTCLOUD_UPLOAD_MAX_FILESIZE}"
 }
 
 nextcloud_configure_max_file_uploads() {
   echo "Configuring Nextcloud::max_file_uploads..."
-  set_php_param max_file_uploads ${NEXTCLOUD_MAX_FILE_UPLOADS}
+  php_config_set "${NEXTCLOUD_INSTALL_DIR}/.user.ini" "max_file_uploads" "${NEXTCLOUD_MAX_FILE_UPLOADS}"
 }
 
 nginx_configure_virtualhost() {
@@ -488,6 +491,7 @@ install_configuration_templates() {
 
 initialize_datadir() {
   echo "Initializing datadir..."
+  mkdir -p ${NEXTCLOUD_DATA_DIR}
   chmod 0755 ${NEXTCLOUD_DATA_DIR}
   chown ${NEXTCLOUD_USER}: ${NEXTCLOUD_DATA_DIR}
 
