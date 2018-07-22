@@ -316,6 +316,23 @@ nextcloud_configure_domain() {
   occ_cli config:system:set trusted_domains 0 --value ${NEXTCLOUD_FQDN}
 }
 
+nextcloud_configure_memcache() {
+  echo "Configuring Nextcloud::memcache..."
+  case ${NEXTCLOUD_MEMCACHE_BACKEND} in
+    APCu)
+      occ_cli config:system:set memcache.local --value "\OC\Memcache\APCu"
+      ;;
+    *)
+      echo
+      echo "ERROR: "
+      echo "  Please specify a valid memcache backend using the NEXTCLOUD_MEMCACHE_BACKEND option."
+      echo "  Accepted values are \"APCu\". Aborting..."
+      echo
+      return 1
+      ;;
+  esac
+}
+
 nextcloud_configure_max_upload_size() {
   echo "Configuring Nextcloud::max_upload_size..."
   php_config_set "${NEXTCLOUD_INSTALL_DIR}/.user.ini" "upload_max_filesize" "${NEXTCLOUD_UPLOAD_MAX_FILESIZE}"
@@ -524,6 +541,7 @@ configure_nextcloud() {
   nextcloud_configure_database
   nextcloud_upgrade
   nextcloud_configure_domain
+  nextcloud_configure_memcache
   nextcloud_configure_max_upload_size
   nextcloud_configure_max_file_uploads
 
