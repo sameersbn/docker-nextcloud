@@ -3,7 +3,7 @@ FROM ubuntu:bionic-20190612
 LABEL maintainer="sameer@damagehead.com"
 
 ENV PHP_VERSION=7.2 \
-    NEXTCLOUD_VERSION=13.0.4 \
+    NEXTCLOUD_VERSION=13.0.12 \
     NEXTCLOUD_USER=www-data \
     NEXTCLOUD_INSTALL_DIR=/var/www/nextcloud \
     NEXTCLOUD_DATA_DIR=/var/lib/nextcloud \
